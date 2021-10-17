@@ -21,21 +21,39 @@ typedef signed long long int int64;
 #define MB KB*1024llu
 #define GB MB*1024llu
 
+enum MemoryBlogFlags
+{
+	MEMORY_FREE = 0x0,
+	MEMORY_ALLOCATED = 0x1
+};
+
+struct MemoryBlock;
+
+struct MemoryBlockHeader
+{
+	MemoryBlock* prev;
+	MemoryBlock* next;
+	MemoryBlogFlags flags;
+};
+
 struct MemoryBlock
 {
-	uint64 size;
-	uint8* address;
-	bool free = true;
+	MemoryBlockHeader header;
+	uint8* memory;
 };
+
+//note(tiago): to access the header we just need to walk back from the pointer by the header size so the start of the header is ptr - sizeof(MemoryBlockHeader)
 
 class MemAllocator
 {
 public:
-	uint64 backstore_size = align_page(16*GB);
+	uint64 backstore_size = align_page(1*GB);
 	uint8* backstore = nullptr;
+	MemoryBlock* first_block;
 
 	MemAllocator();
 	~MemAllocator();
 
+	void PrintBlocks() const;
 };
 
